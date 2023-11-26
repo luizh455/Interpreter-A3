@@ -187,20 +187,24 @@ public class Interpretador {
 
         // print(arquivo.linhas.get(0));
 
-        // Analise Lexica - Tokenizacao
+        
 
         // List<Token> tokens = tokenize(arquivo.linhas.get(0), 0);
 
         // List<Token> tokens2 = tokenize(arquivo.linhas.get(1), 1);
 
-        // Analise Sintatica
+        
 
+
+        // Analise Lexica - Tokenizacao
         List<List<Token>> tokenList = new ArrayList<>();
 
         for (int i = 0; i < arquivo.linhas.size(); i++) {
             tokenList.add(tokenize(arquivo.linhas.get(i), i));
         }
 
+
+        // Analise Sintatica
         for (List<Token> tokens : tokenList) {
             try {
                 analyzeExpression(tokens);
