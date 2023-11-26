@@ -29,8 +29,26 @@ class Token {
                 return TokenType.Minus;
             } else if (isTimes(value)) {
                 return TokenType.Times;
+            } else if (isBracket(value)) {
+                return TokenType.Bracket;
+            } else if (isRegister(value)) {
+                return TokenType.Register;
             }
             return TokenType.Undefined;
+        }
+
+        public boolean isRegister(String strNum) {
+            if(strNum.contains("r")) {
+                return true;
+            }
+            return false;            
+        }
+
+        public boolean isBracket(String strNum) {
+            if(strNum.equals(")") || strNum.equals("(")) {
+                return true;
+            }
+            return false;            
         }
 
         public boolean isPlus(String strNum) {
@@ -72,9 +90,10 @@ class Token {
         Plus,
         Minus,
         Times,
-        Identifier,
         Undefined,
-        Operation
+        Operation,
+        Bracket,
+        Register
     }
 
     class Arquivo {
@@ -87,8 +106,18 @@ class Token {
         public Arquivo() {}
     }
 
+    class OperationRegister {
+        String name;
+        List<Token> tokens;
+        public OperationRegister(String name, List<Token> tokens) {
+            this.name = name;
+            this.tokens = tokens;
+        }        
+        public OperationRegister(){}
+    }
+
 public class Interpretador {
-    static File absPath = new File(Interpretador.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+    static File absPath = new File("/Users/llage/dev/interpreter/Interpreter-A3");//new File(Interpretador.class.getProtectionDomain().getCodeSource().getLocation().getPath());
     
     public static String[] listFiles() {
         String[] listaDeArquivos = absPath.list();
@@ -162,6 +191,8 @@ public class Interpretador {
             e.printStackTrace();
             print("Ocorreu um erro na compilacao: " + e.getMessage());
         }
+
+        orderOperations(tokens);
     }
 
     public static void analyzeExpression(List<Token> tokens) throws Exception {
@@ -184,36 +215,100 @@ public class Interpretador {
             }            
         }
 
-        if (tokens.get(tokens.size()-1).type != TokenType.Number) {
+        if (tokens.get(tokens.size()).type != TokenType.Number) {
             throw new Exception("Não se deve finalizar com um operador." + " Onde ocorreu: linha \""+ tokens.get(0).line + "\"");
         }
         print("linha: " + tokens.get(0).line + " correta");
 
     }
 
-    class OperationValue {
-        
-    }
+    
 
     class Operation {
-        int left;
-        int right;
+        String left;
+        int nextOp;
         TokenType operator;
+        int priority = 0;
+        public Operation (String left, TokenType op) {
+            this.left = left;
+        }
     }
 
+    //operation.sum.next ()
+
+
+    //(1 + 2 + 3) + 4
+    // 1 * 2 + 3
+    // 1 + 2 * 3
+    // 1 + 2 + 3 //p1
+    // + 4 //p0
+
+    // 1 + (2 + 3 + 4)
     public static void orderOperations(List<Token> tokens) {
         int result = 0;
-        for (Token token : tokens) {
-            result = doOperation(result, result, null);
-            
-        }
+        List<OperationRegister> operacoes = new ArrayList<>();
+        List<Token> updatedTokens = tokens;
+        int registerCounter = 0;
 
+        while(getLastOpenBracket(updatedTokens) != -1) {
+        String register = "r" + String.valueOf(registerCounter);
+
+        int openBracket = getLastOpenBracket(updatedTokens);
+        int closeBracket = getFirstCloseBracket(updatedTokens);
+
+        List<Token> sublist = updatedTokens.subList(openBracket, closeBracket+1);
+        OperationRegister newOp = new OperationRegister(register, sublist);
+        operacoes.add(newOp);
+
+        updatedTokens = extractFromIndex(updatedTokens, openBracket, closeBracket, register);
+        
+
+        printSeparator();
+        printTokens(updatedTokens);
+        printSeparator();
+        printTokens(sublist);
+        printSeparator();
+        printSeparator();
+        registerCounter++;
+
+        }
+       
+
+
+    }
+
+    public static List<Token> extractFromIndex(List<Token> tokens, int start, int end, String register) {
+        List<Token> aux = new ArrayList<>();
+
+        for (int i=0; i< tokens.size(); i++) {
+            if((i >= start) && (i <= end)) {
+
+            } else {
+                aux.add(tokens.get(i));
+            }
+
+        }
+        aux.add(start, new Token(register, -1, -1));
+        return aux;
+    }
+
+   
+
+    public static int getNextTimes(List<Token> tokens) {
+        int result = -1;
+
+        for (int i=0; i < tokens.size(); i++) {
+             if (tokens.get(i).text.equals("*")) {
+                return i;
+            }           
+        }
+        return result;
     }
 
     public static int getLastOpenBracket(List<Token> tokens) {
         int result = -1;
 
-        for (int i=0; i < tokens.size()-1; i++) {
+        for (int i=0; i < tokens.size(); i++) {
              if (tokens.get(i).text.equals("(")) {
                 result = i;
             }           
@@ -224,10 +319,10 @@ public class Interpretador {
     public static int getFirstCloseBracket(List<Token> tokens) {
         int result = -1;
 
-        for (int i=0; i < tokens.size()-1; i++) {
+        for (int i=0; i < tokens.size(); i++) {
              if (tokens.get(i).text.equals(")")) {
                 return i;
-            }           
+            }
         }
         return result;
     }
@@ -298,6 +393,7 @@ public class Interpretador {
     }
 
     public static void printTokens(List<Token> tokens) {
+        if (tokens.isEmpty()) return;
         for (Token token : tokens) {
             print("tipo:" + token.type + " texto: " + token.text + " posicao: " + token.pos);
         }
