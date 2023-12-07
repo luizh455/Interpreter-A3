@@ -133,7 +133,7 @@ class OrderOperationsTuple {
 }
 
 public class Interpretador {
-    static File absPath = new File(Interpretador.class.getProtectionDomain().getCodeSource().getLocation().getPath());// new
+    static File absPath = new File("/Users/llage/dev/interpreter/Interpreter-A3");//new File(Interpretador.class.getProtectionDomain().getCodeSource().getLocation().getPath());// new
                                                                                                                       // File("/Users/llage/dev/interpreter/Interpreter-A3");//
 
     public static String[] listFiles() {
@@ -185,17 +185,6 @@ public class Interpretador {
             e.printStackTrace();
         }
 
-        // print(arquivo.linhas.get(0));
-
-        
-
-        // List<Token> tokens = tokenize(arquivo.linhas.get(0), 0);
-
-        // List<Token> tokens2 = tokenize(arquivo.linhas.get(1), 1);
-
-        
-
-
         // Analise Lexica - Tokenizacao
         List<List<Token>> tokenList = new ArrayList<>();
 
@@ -204,7 +193,7 @@ public class Interpretador {
         }
 
 
-        // Analise Sintatica
+        // Analise Sintatica e semantica
         for (List<Token> tokens : tokenList) {
             try {
                 analyzeExpression(tokens);
@@ -223,32 +212,16 @@ public class Interpretador {
 
         }
 
-        // try {
-        // analyzeExpression(tokens);
-        // } catch (Exception e) {
-        // e.printStackTrace();
-        // print("Ocorreu um erro na compilacao: " + e.getMessage());
-        // }
-
-        // try {
-        // analyzeExpression(tokens2);
-        // } catch (Exception e) {
-        // e.printStackTrace();
-        // print("Ocorreu um erro na compilacao: " + e.getMessage());
-        // }
-
     }
 
     public static void solveOperations(List<Token> tokens, List<OperationRegister> operacoes) {
 
-        print("REGISTERS === START");
         for (OperationRegister op : operacoes) {
             print(op.name);
             printTokens(op.tokens);
             printSeparator();
         }
-        print("REGISTERS === END");
-        int result = 0;
+
         for (int i = 0; i < tokens.size(); i++) {
             if (tokens.get(i).type == TokenType.Register) {
                 int resultRegister = solveRegister(tokens.get(i), operacoes);
@@ -259,9 +232,6 @@ public class Interpretador {
 
         int resultadoFinal = calcOperations(tokens);
 
-        print("REGISTERS SOLVED START");
-        printTokens(tokens);
-        print("REGISTERS SOLVED END");
         print("Final conta start");
         print(resultadoFinal);
         print("Final conta end");
@@ -291,9 +261,7 @@ public class Interpretador {
         int result = 0;
         tokens = solveTimes(tokens);
         tokens = solvePlus(tokens);
-
-        print("ENTAO TA BOM");
-        printTokens(tokens);
+        tokens = solveMinus(tokens);
 
         for (int i = 0; i < tokens.size(); i++) {
             if (tokens.get(i).type == TokenType.Number) {
@@ -302,6 +270,32 @@ public class Interpretador {
         }
 
         return result;
+    }
+
+        static List<Token> solveMinus(List<Token> tokens) {
+        int minusFound = findMinus(tokens);
+        // printTokens(tokens);
+        while (minusFound != -1) {
+            printSeparator();
+            printSeparator();
+            printSeparator();
+            printSeparator();
+            print(minusFound);
+            printTokens(tokens);
+
+            int opResult = doOperation(tokens.get(minusFound - 1).text, tokens.get(minusFound + 1).text,
+                    tokens.get(minusFound).text);
+            Token toAdd = new Token(String.valueOf(opResult), -1, -1);
+            tokens.remove(minusFound + 1);
+            tokens.remove(minusFound);
+            tokens.set(minusFound - 1, toAdd);
+            print("result minus " + opResult);
+
+            minusFound = findMinus(tokens);
+        }
+        // printTokens(tokens);
+
+        return tokens;
     }
 
     static List<Token> solvePlus(List<Token> tokens) {
@@ -324,11 +318,7 @@ public class Interpretador {
             print("result plus " + opResult);
 
             plusFound = findPlus(tokens);
-            // result = opResult;
         }
-
-        print("teste");
-
         // printTokens(tokens);
 
         return tokens;
@@ -358,10 +348,6 @@ public class Interpretador {
             result = opResult;
         }
 
-        print("teste");
-
-        // printTokens(tokens);
-
         return tokens;
     }
 
@@ -377,6 +363,15 @@ public class Interpretador {
     static int findPlus(List<Token> tokens) {
         for (int i = 0; i < tokens.size(); i++) {
             if (tokens.get(i).text.equals("+")) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    static int findMinus(List<Token> tokens) {
+        for (int i = 0; i < tokens.size(); i++) {
+            if (tokens.get(i).text.equals("-")) {
                 return i;
             }
         }
@@ -411,21 +406,34 @@ public class Interpretador {
 
         for (Token token : tokens) {
             if (nextType == TokenType.Number) {
-                if (token.type != TokenType.Number) {
+                if (token.type != TokenType.Number && token.type != TokenType.Bracket) {
                     throw new Exception("Nesse lugar deveria ser um numero mas tem \"" + token.text
                             + "\". onde ocorreu: " + token.line + ":" + token.pos);
                 }
-                nextType = TokenType.Operation;
+                
+                if (token.type == TokenType.Bracket) {
+                    nextType = TokenType.Number;
+                } else {
+                    nextType = TokenType.Operation;
+                }
+                
             } else {
-                if (!(token.type == TokenType.Plus || token.type == TokenType.Minus || token.type == TokenType.Times)) {
+                if (token.type == TokenType.Bracket) {
+                    nextType = TokenType.Operation;
+                } else if (!(token.type == TokenType.Plus || token.type == TokenType.Minus || token.type == TokenType.Times)) {
                     throw new Exception("Nesse lugar deveria ser um operador mas tem \"" + token.text
                             + "\". Onde ocorreu: " + token.line + ":" + token.pos);
                 }
-                nextType = TokenType.Number;
+                if (token.type == TokenType.Bracket) {
+
+                } else {
+                    nextType = TokenType.Number;
+                }
+                
             }
         }
 
-        if (tokens.get(tokens.size() - 1).type != TokenType.Number) {
+        if (tokens.get(tokens.size() - 1).type == TokenType.Minus || tokens.get(tokens.size() - 1).type == TokenType.Plus || tokens.get(tokens.size() - 1).type == TokenType.Times) {
             throw new Exception(
                     "Não se deve finalizar com um operador." + " Onde ocorreu: linha \"" + tokens.get(0).line + "\"");
         }
@@ -464,14 +472,6 @@ public class Interpretador {
 
             updatedTokens = extractFromIndex(updatedTokens, openBracket, closeBracket, register);
 
-            // printSeparator();
-            // printTokens(updatedTokens);
-            // printSeparator();
-            // printTokens(sublist);
-            // printSeparator();
-            // printSeparator();
-            // registerCounter++;
-
             lastOpenBracketPosition = getLastOpenBracket(updatedTokens);
         }
 
@@ -490,18 +490,6 @@ public class Interpretador {
         }
         aux.add(start, new Token(register, -1, -1));
         return aux;
-    }
-
-    public static int getNextOperator(List<Token> tokens) {
-        int result = -1;
-
-        for (int i = 0; i < tokens.size(); i++) {
-            if (tokens.get(i).type == TokenType.Plus || tokens.get(i).type == TokenType.Minus
-                    || tokens.get(i).type == TokenType.Times) {
-                return i;
-            }
-        }
-        return result;
     }
 
     public static int getLastOpenBracket(List<Token> tokens) {
@@ -542,9 +530,9 @@ public class Interpretador {
         }
 
         if (count < 0)
-            throw new Exception(count + "Falta abrir chaves na linha: " + tokens.get(0).line);
+            throw new Exception(count + "Falta abrir bracket na linha: " + tokens.get(0).line);
         if (count > 0)
-            throw new Exception(count + "Falta fechar chaves na linha: " + tokens.get(0).line);
+            throw new Exception(count + "Falta fechar bracket na linha: " + tokens.get(0).line);
     }
 
     public static int doOperation(String left, String right, String operator) {
