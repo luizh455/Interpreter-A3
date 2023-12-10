@@ -133,7 +133,7 @@ class OrderOperationsTuple {
 }
 
 public class Interpretador {
-    static File absPath = new File("/Users/llage/dev/interpreter/Interpreter-A3");//new File(Interpretador.class.getProtectionDomain().getCodeSource().getLocation().getPath());// new
+    static File absPath = new File(Interpretador.class.getProtectionDomain().getCodeSource().getLocation().getPath());// new
                                                                                                                       // File("/Users/llage/dev/interpreter/Interpreter-A3");//
 
     public static String[] listFiles() {
@@ -205,7 +205,6 @@ public class Interpretador {
 
         for (List<Token> tokens : tokenList) {
             if (!(tokens.get(0).text.isEmpty())) {// remover caso nao queira pular linhas em branco e retornar 0
-                System.out.println(tokens.get(0).text == (""));
                 OrderOperationsTuple tuple = orderOperations(tokens);
                 solveOperations(tuple.tokens, tuple.operations);
             }
@@ -217,9 +216,9 @@ public class Interpretador {
     public static void solveOperations(List<Token> tokens, List<OperationRegister> operacoes) {
 
         for (OperationRegister op : operacoes) {
-            print(op.name);
-            printTokens(op.tokens);
-            printSeparator();
+            //print(op.name);
+           // printTokens(op.tokens);
+            //printSeparator();
         }
 
         for (int i = 0; i < tokens.size(); i++) {
@@ -232,9 +231,8 @@ public class Interpretador {
 
         int resultadoFinal = calcOperations(tokens);
 
-        print("Final conta start");
+        System.out.print("resultado: ");
         print(resultadoFinal);
-        print("Final conta end");
 
     }
 
@@ -276,12 +274,12 @@ public class Interpretador {
         int minusFound = findMinus(tokens);
         // printTokens(tokens);
         while (minusFound != -1) {
-            printSeparator();
-            printSeparator();
-            printSeparator();
-            printSeparator();
-            print(minusFound);
-            printTokens(tokens);
+           // printSeparator();
+            //printSeparator();
+            //printSeparator();
+            //printSeparator();
+           // print(minusFound);
+            //printTokens(tokens);
 
             int opResult = doOperation(tokens.get(minusFound - 1).text, tokens.get(minusFound + 1).text,
                     tokens.get(minusFound).text);
@@ -289,7 +287,6 @@ public class Interpretador {
             tokens.remove(minusFound + 1);
             tokens.remove(minusFound);
             tokens.set(minusFound - 1, toAdd);
-            print("result minus " + opResult);
 
             minusFound = findMinus(tokens);
         }
@@ -302,12 +299,7 @@ public class Interpretador {
         int plusFound = findPlus(tokens);
         // printTokens(tokens);
         while (plusFound != -1) {
-            printSeparator();
-            printSeparator();
-            printSeparator();
-            printSeparator();
-            print(plusFound);
-            printTokens(tokens);
+          
 
             int opResult = doOperation(tokens.get(plusFound - 1).text, tokens.get(plusFound + 1).text,
                     tokens.get(plusFound).text);
@@ -315,7 +307,6 @@ public class Interpretador {
             tokens.remove(plusFound + 1);
             tokens.remove(plusFound);
             tokens.set(plusFound - 1, toAdd);
-            print("result plus " + opResult);
 
             plusFound = findPlus(tokens);
         }
@@ -329,12 +320,7 @@ public class Interpretador {
         int timesFound = findTimes(tokens);
         // printTokens(tokens);
         while (timesFound != -1) {
-            printSeparator();
-            printSeparator();
-            printSeparator();
-            printSeparator();
-            print(timesFound);
-            printTokens(tokens);
+          
 
             int opResult = doOperation(tokens.get(timesFound - 1).text, tokens.get(timesFound + 1).text,
                     tokens.get(timesFound).text);
@@ -342,8 +328,7 @@ public class Interpretador {
             tokens.remove(timesFound + 1);
             tokens.remove(timesFound);
             tokens.set(timesFound - 1, toAdd);
-            print("result times " + opResult);
-
+           
             timesFound = findTimes(tokens);
             result = opResult;
         }
