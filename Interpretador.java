@@ -217,23 +217,33 @@ public class Interpretador {
 
         for (OperationRegister op : operacoes) {
             //print(op.name);
-           // printTokens(op.tokens);
+            //printTokens(op.tokens);
             //printSeparator();
         }
 
         for (int i = 0; i < tokens.size(); i++) {
             if (tokens.get(i).type == TokenType.Register) {
                 int resultRegister = solveRegister(tokens.get(i), operacoes);
-                Token solvedToken = new Token(Integer.toString(resultRegister), -1, -1);
+                Token solvedToken = new Token(Integer.toString(resultRegister),  getTokenLine(tokens), -1);
                 tokens.set(i, solvedToken);
             }
         }
 
         int resultadoFinal = calcOperations(tokens);
-
+ 
         System.out.print("resultado: ");
         print(resultadoFinal);
 
+    }
+
+    public static int getTokenLine(List<Token> tokens) {
+        int result = -1;
+        for (Token token : tokens) {
+            if(token.line == -1) {
+                result = token.line;
+            }
+        }
+        return result;
     }
 
     public static int solveRegister(Token token, List<OperationRegister> operacoes) {
@@ -272,13 +282,13 @@ public class Interpretador {
 
         static List<Token> solveMinus(List<Token> tokens) {
         int minusFound = findMinus(tokens);
-        // printTokens(tokens);
+        //printTokens(tokens);
         while (minusFound != -1) {
-           // printSeparator();
-            //printSeparator();
-            //printSeparator();
-            //printSeparator();
-           // print(minusFound);
+            printSeparator();
+            printSeparator();
+            printSeparator();
+            printSeparator();
+            //print(minusFound);
             //printTokens(tokens);
 
             int opResult = doOperation(tokens.get(minusFound - 1).text, tokens.get(minusFound + 1).text,
@@ -297,7 +307,7 @@ public class Interpretador {
 
     static List<Token> solvePlus(List<Token> tokens) {
         int plusFound = findPlus(tokens);
-        // printTokens(tokens);
+         //printTokens(tokens);
         while (plusFound != -1) {
           
 
@@ -310,7 +320,7 @@ public class Interpretador {
 
             plusFound = findPlus(tokens);
         }
-        // printTokens(tokens);
+     //printTokens(tokens);
 
         return tokens;
     }
@@ -318,7 +328,7 @@ public class Interpretador {
     static List<Token> solveTimes(List<Token> tokens) {
         int result = 0;
         int timesFound = findTimes(tokens);
-        // printTokens(tokens);
+         //printTokens(tokens);
         while (timesFound != -1) {
           
 
@@ -458,6 +468,7 @@ public class Interpretador {
             updatedTokens = extractFromIndex(updatedTokens, openBracket, closeBracket, register);
 
             lastOpenBracketPosition = getLastOpenBracket(updatedTokens);
+            registerCounter++;
         }
 
         return new OrderOperationsTuple(updatedTokens, operacoes);
